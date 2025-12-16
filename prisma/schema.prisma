@@ -1,14 +1,158 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model chat {
+  ChatID                  Int           @id @default(autoincrement())
+  UserID1                 Int
+  UserID2                 Int
+  CreatedAt               DateTime?     @db.DateTime(0)
+  user_chat_UserID1Touser user          @relation("chat_UserID1Touser", fields: [UserID1], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "chat_ibfk_1")
+  user_chat_UserID2Touser user          @relation("chat_UserID2Touser", fields: [UserID2], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "chat_ibfk_2")
+  chatmessage             chatmessage[]
+
+  @@unique([UserID1, UserID2], map: "UserID1")
+  @@index([UserID2], map: "UserID2")
+}
+
+model chatmessage {
+  ChatMessageID Int       @id @default(autoincrement())
+  ChatID        Int
+  SenderID      Int
+  MessageText   String?   @db.VarChar(500)
+  SentAt        DateTime? @db.DateTime(0)
+  chat          chat      @relation(fields: [ChatID], references: [ChatID], onDelete: NoAction, onUpdate: NoAction, map: "chatmessage_ibfk_1")
+  user          user      @relation(fields: [SenderID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "chatmessage_ibfk_2")
+
+  @@index([ChatID], map: "ChatID")
+  @@index([SenderID], map: "SenderID")
+}
+
+model favorite {
+  FavoriteID Int       @id @default(autoincrement())
+  VenueID    Int?
+  UserID     Int?
+  AddedAt    DateTime? @db.DateTime(0)
+  venue      venue?    @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "favorite_ibfk_1")
+  user       user?     @relation(fields: [UserID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "favorite_ibfk_2")
+
+  @@index([UserID], map: "UserID")
+  @@index([VenueID], map: "VenueID")
+}
+
+model feedback {
+  FeedbackID        Int       @id @default(autoincrement())
+  VenueID           Int?
+  UserID            Int?
+  TimeStamp         DateTime? @db.DateTime(0)
+  CrowdLevel        String?   @db.VarChar(50)
+  UserCountEstimate Int?
+  venue             venue?    @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "feedback_ibfk_1")
+  user              user?     @relation(fields: [UserID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "feedback_ibfk_2")
+
+  @@index([UserID], map: "UserID")
+  @@index([VenueID], map: "VenueID")
+}
+
+model user {
+  UserID                  Int           @id @default(autoincrement())
+  FirstName               String?       @db.VarChar(100)
+  LastName                String?       @db.VarChar(100)
+  PasswordHash            String?       @db.VarChar(255)
+  Age                     Int?
+  CampusCity              String?       @db.VarChar(100)
+  Gender                  String?       @db.VarChar(50)
+  Bio                     String?       @db.VarChar(255)
+  Role                    String?       @db.VarChar(50)
+  chat_chat_UserID1Touser chat[]        @relation("chat_UserID1Touser")
+  chat_chat_UserID2Touser chat[]        @relation("chat_UserID2Touser")
+  chatmessage             chatmessage[]
+  favorite                favorite[]
+  feedback                feedback[]
+  usercontact             usercontact[]
+}
+
+model usercontact {
+  UserContactID Int     @id @default(autoincrement())
+  UserID        Int
+  Email         String? @db.VarChar(100)
+  UserPhone     String? @db.VarChar(20)
+  user          user    @relation(fields: [UserID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "usercontact_ibfk_1")
+
+  @@index([UserID], map: "UserID")
+}
+
+model venue {
+  VenueID      Int            @id @default(autoincrement())
+  Name         String         @db.VarChar(100)
+  Description  String?        @db.VarChar(255)
+  OpeningHours Json?
+  MaxCap       Int?
+  AveragePrice String?        @db.VarChar(50)
+  VenueTypeID  Int?
+  favorite     favorite[]
+  feedback     feedback[]
+  venuetype    venuetype?     @relation(fields: [VenueTypeID], references: [VenueTypeID], onDelete: NoAction, onUpdate: NoAction, map: "venue_ibfk_1")
+  venueaddress venueaddress[]
+  venuecontact venuecontact[]
+  venuefoto    venuefoto[]
+  venuestatus  venuestatus[]
+
+  @@index([VenueTypeID], map: "VenueTypeID")
+}
+
+model venueaddress {
+  VenueAddressID Int      @id @default(autoincrement())
+  VenueID        Int?
+  Address        String?  @db.VarChar(100)
+  PostalCode     String?  @db.VarChar(20)
+  City           String?  @db.VarChar(100)
+  Lat            Decimal? @db.Decimal(9, 6)
+  Lng            Decimal? @db.Decimal(9, 6)
+  venue          venue?   @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venueaddress_ibfk_1")
+
+  @@index([VenueID], map: "VenueID")
+}
+
+model venuecontact {
+  VenueContactID Int     @id @default(autoincrement())
+  VenueID        Int?
+  Email          String? @db.VarChar(100)
+  Phone          String? @db.VarChar(20)
+  WebsiteURL     String? @db.VarChar(255)
+  venue          venue?  @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venuecontact_ibfk_1")
+
+  @@index([VenueID], map: "VenueID")
+}
+
+model venuefoto {
+  VenueFotoID Int    @id @default(autoincrement())
+  VenueID     Int
+  Foto        Bytes?
+  venue       venue  @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venuefoto_ibfk_1")
+
+  @@index([VenueID], map: "VenueID")
+}
+
+model venuestatus {
+  StatusID          Int       @id @default(autoincrement())
+  VenueID           Int?
+  TimeStamp         DateTime? @db.DateTime(0)
+  CrowdLevel        String?   @db.VarChar(50)
+  UserCountEstimate Int?
+  IsOpen            Boolean?
+  venue             venue?    @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venuestatus_ibfk_1")
+
+  @@index([VenueID], map: "VenueID")
+}
+
+model venuetype {
+  VenueTypeID Int     @id @default(autoincrement())
+  VenueType   String  @db.VarChar(255)
+  venue       venue[]
 }
