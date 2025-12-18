@@ -60,21 +60,25 @@ model feedback {
 }
 
 model user {
-  UserID                  Int           @id @default(autoincrement())
-  FirstName               String?       @db.VarChar(100)
-  LastName                String?       @db.VarChar(100)
-  PasswordHash            String?       @db.VarChar(255)
-  Age                     Int?
-  CampusCity              String?       @db.VarChar(100)
-  Gender                  String?       @db.VarChar(50)
-  Bio                     String?       @db.VarChar(255)
-  Role                    String?       @db.VarChar(50)
-  chat_chat_UserID1Touser chat[]        @relation("chat_UserID1Touser")
-  chat_chat_UserID2Touser chat[]        @relation("chat_UserID2Touser")
-  chatmessage             chatmessage[]
-  favorite                favorite[]
-  feedback                feedback[]
-  usercontact             usercontact[]
+  UserID                          Int           @id @default(autoincrement())
+  FirstName                       String?       @db.VarChar(100)
+  LastName                        String?       @db.VarChar(100)
+  PasswordHash                    String?       @db.VarChar(255)
+  Age                             Int?
+  CampusCity                      String?       @db.VarChar(100)
+  Gender                          String?       @db.VarChar(50)
+  Bio                             String?       @db.VarChar(255)
+  Role                            String?       @db.VarChar(50)
+  chat_chat_UserID1Touser         chat[]        @relation("chat_UserID1Touser")
+  chat_chat_UserID2Touser         chat[]        @relation("chat_UserID2Touser")
+  chatmessage                     chatmessage[]
+  favorite                        favorite[]
+  feedback                        feedback[]
+  friend_friend_RequestedByTouser friend[]      @relation("friend_RequestedByTouser")
+  friend_friend_UserID1Touser     friend[]      @relation("friend_UserID1Touser")
+  friend_friend_UserID2Touser     friend[]      @relation("friend_UserID2Touser")
+  user_role                       user_role[]
+  usercontact                     usercontact[]
 }
 
 model usercontact {
@@ -95,6 +99,7 @@ model venue {
   MaxCap       Int?
   AveragePrice String?        @db.VarChar(50)
   VenueTypeID  Int?
+  OwnerID      Int?
   favorite     favorite[]
   feedback     feedback[]
   venuetype    venuetype?     @relation(fields: [VenueTypeID], references: [VenueTypeID], onDelete: NoAction, onUpdate: NoAction, map: "venue_ibfk_1")
@@ -155,4 +160,43 @@ model venuetype {
   VenueTypeID Int     @id @default(autoincrement())
   VenueType   String  @db.VarChar(255)
   venue       venue[]
+}
+
+model friend {
+  FriendID                      Int           @id @default(autoincrement())
+  UserID1                       Int
+  UserID2                       Int
+  Status                        friend_Status @default(pending)
+  RequestedBy                   Int
+  CreatedAt                     DateTime?     @default(now()) @db.DateTime(0)
+  user_friend_RequestedByTouser user          @relation("friend_RequestedByTouser", fields: [RequestedBy], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_requested")
+  user_friend_UserID1Touser     user          @relation("friend_UserID1Touser", fields: [UserID1], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user1")
+  user_friend_UserID2Touser     user          @relation("friend_UserID2Touser", fields: [UserID2], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user2")
+
+  @@unique([UserID1, UserID2], map: "unique_friend_pair")
+  @@index([RequestedBy], map: "fk_friend_requested")
+  @@index([UserID2], map: "fk_friend_user2")
+}
+
+model role {
+  RoleID    Int         @id @default(autoincrement())
+  Name      String      @unique(map: "Name") @db.VarChar(50)
+  user_role user_role[]
+}
+
+model user_role {
+  UserRoleID Int  @id @default(autoincrement())
+  UserID     Int
+  RoleID     Int
+  role       role @relation(fields: [RoleID], references: [RoleID], onDelete: NoAction, onUpdate: NoAction, map: "fk_userrole_role")
+  user       user @relation(fields: [UserID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "fk_userrole_user")
+
+  @@unique([UserID, RoleID], map: "UserID")
+  @@index([RoleID], map: "fk_userrole_role")
+}
+
+enum friend_Status {
+  pending
+  accepted
+  blocked
 }
