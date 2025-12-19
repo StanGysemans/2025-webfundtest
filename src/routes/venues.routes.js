@@ -1,5 +1,5 @@
 import express from 'express';
-import {getVenues, getVenueById, createVenue, updateVenue, deleteVenue} from '../controllers/venues.controller.js';
+import {getVenues, getVenueById, createVenue, updateVenue, deleteVenue} from '../controllers/venues.controllers.js';
 
 import { auth } from '../middleware/auth.middleware.js';
 import { role } from '../middleware/role.middleware.js';
