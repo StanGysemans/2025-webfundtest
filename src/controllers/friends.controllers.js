@@ -67,10 +67,12 @@ export const deleteFriend = async (req, res) => {
 
 export const getPendingRequests = async (req, res) => {
   try {
+    console.log('Getting pending requests for user:', req.user.UserID);
     const requests = await friendService.getPendingRequests(req.user.UserID);
     res.json(requests);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error getting pending requests:', error);
+    res.status(500).json({ error: error.message || 'Er is een fout opgetreden bij het ophalen van vriend verzoeken' });
   }
 };
 

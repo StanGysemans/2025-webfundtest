@@ -4,7 +4,9 @@ import {
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateLocationPreference,
+  getLocationPreference
 } from '../controllers/users.controllers.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { role } from '../middleware/role.middleware.js';
@@ -16,6 +18,10 @@ router.get('/:id', auth, getUserById);
 router.post('/', createUser);
 router.put('/:id', auth, updateUser);
 router.delete('/:id', auth, role(['admin']), deleteUser);
+
+// Location preferences
+router.get('/me/location-preference', auth, getLocationPreference);
+router.put('/me/location-preference', auth, updateLocationPreference);
 
 export default router;
 

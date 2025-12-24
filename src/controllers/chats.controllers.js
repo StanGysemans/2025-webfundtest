@@ -26,14 +26,14 @@ export const getChatById = async (req, res) => {
 
 export const createChat = async (req, res) => {
   try {
-    console.log('HEADERS:', req.headers['content-type']);
-    console.log('BODY:', req.body);
-
-    const { UserID2 } = req.body;
+    // Support both PascalCase and camelCase
+    const UserID2 = req.body.UserID2 || req.body.userID2 || req.body.userId2;
+    
     if (!UserID2) {
       return res.status(400).json({ error: 'UserID2 is required' });
     }
-    const chat = await chatService.create(req.user.UserID, UserID2);
+    
+    const chat = await chatService.create(req.user.UserID, parseInt(UserID2));
     res.status(201).json(chat);
   } catch (error) {
     res.status(500).json({ error: error.message });

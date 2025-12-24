@@ -13,21 +13,27 @@ export const getAll = (userId) => {
         select: {
           UserID: true,
           FirstName: true,
-          LastName: true
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
         }
       },
       user_friend_UserID2Touser: {
         select: {
           UserID: true,
           FirstName: true,
-          LastName: true
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
         }
       },
       user_friend_RequestedByTouser: {
         select: {
           UserID: true,
           FirstName: true,
-          LastName: true
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
         }
       }
     }
@@ -92,19 +98,48 @@ export const remove = (id) => {
 };
 
 export const getPendingRequests = (userId) => {
+  const userIdInt = parseInt(userId);
   return prisma.friend.findMany({
     where: {
-      OR: [
-        { UserID1: parseInt(userId) },
-        { UserID2: parseInt(userId) }
-      ],
-      Status: 'pending',
-      NOT: { RequestedBy: parseInt(userId) }
+      AND: [
+        {
+          OR: [
+            { UserID1: userIdInt },
+            { UserID2: userIdInt }
+          ]
+        },
+        { Status: 'pending' },
+        { NOT: { RequestedBy: userIdInt } }
+      ]
     },
     include: {
-      user_friend_UserID1Touser: true,
-      user_friend_UserID2Touser: true,
-      user_friend_RequestedByTouser: true
+      user_friend_UserID1Touser: {
+        select: {
+          UserID: true,
+          FirstName: true,
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
+        }
+      },
+      user_friend_UserID2Touser: {
+        select: {
+          UserID: true,
+          FirstName: true,
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
+        }
+      },
+      user_friend_RequestedByTouser: {
+        select: {
+          UserID: true,
+          FirstName: true,
+          LastName: true,
+          AvatarColor: true,
+          AvatarColorDark: true
+        }
+      }
     }
   });
 };

@@ -69,6 +69,11 @@ model user {
   Gender                          String?       @db.VarChar(50)
   Bio                             String?       @db.VarChar(255)
   Role                            String?       @db.VarChar(50)
+  AvatarColor                     String?       @db.VarChar(7)
+  AvatarColorDark                 String?       @db.VarChar(7)
+  LocationTrackingEnabled         Boolean?      @default(false)
+  LocationLat                     Decimal?       @db.Decimal(10, 8)
+  LocationLng                     Decimal?       @db.Decimal(11, 8)
   chat_chat_UserID1Touser         chat[]        @relation("chat_UserID1Touser")
   chat_chat_UserID2Touser         chat[]        @relation("chat_UserID2Touser")
   chatmessage                     chatmessage[]
@@ -79,6 +84,8 @@ model user {
   friend_friend_UserID2Touser     friend[]      @relation("friend_UserID2Touser")
   user_role                       user_role[]
   usercontact                     usercontact[]
+  roleresquest                    rolerequest[]
+  venueping                       venueping[]
 }
 
 model usercontact {
@@ -106,7 +113,9 @@ model venue {
   venueaddress venueaddress[]
   venuecontact venuecontact[]
   venuefoto    venuefoto[]
+  venuesfeerbeeld venuesfeerbeeld[]
   venuestatus  venuestatus[]
+  venueping    venueping[]
 
   @@index([VenueTypeID], map: "VenueTypeID")
 }
@@ -139,7 +148,17 @@ model venuefoto {
   VenueFotoID Int    @id @default(autoincrement())
   VenueID     Int
   Foto        Bytes?
+  IsHoofdFoto Boolean? @default(false)
   venue       venue  @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venuefoto_ibfk_1")
+
+  @@index([VenueID], map: "VenueID")
+}
+
+model venuesfeerbeeld {
+  SfeerbeeldID Int    @id @default(autoincrement())
+  VenueID      Int
+  Foto         Bytes?
+  venue        venue  @relation(fields: [VenueID], references: [VenueID], onDelete: Cascade, onUpdate: NoAction, map: "venuesfeerbeeld_ibfk_1")
 
   @@index([VenueID], map: "VenueID")
 }
@@ -154,6 +173,20 @@ model venuestatus {
   venue             venue?    @relation(fields: [VenueID], references: [VenueID], onDelete: NoAction, onUpdate: NoAction, map: "venuestatus_ibfk_1")
 
   @@index([VenueID], map: "VenueID")
+}
+
+model venueping {
+  PingID     Int       @id @default(autoincrement())
+  VenueID   Int
+  UserID    Int
+  Percentage Int       @db.TinyInt
+  TimeStamp DateTime?  @default(now()) @db.DateTime(0)
+  venue     venue      @relation(fields: [VenueID], references: [VenueID], onDelete: Cascade, onUpdate: NoAction, map: "venueping_ibfk_1")
+  user      user       @relation(fields: [UserID], references: [UserID], onDelete: Cascade, onUpdate: NoAction, map: "venueping_ibfk_2")
+
+  @@index([VenueID], map: "VenueID")
+  @@index([UserID], map: "UserID")
+  @@index([TimeStamp], map: "TimeStamp")
 }
 
 model venuetype {
@@ -199,4 +232,25 @@ enum friend_Status {
   pending
   accepted
   blocked
+}
+
+enum roleRequest_Status {
+  pending
+  approved
+  rejected
+}
+
+model rolerequest {
+  RoleRequestID Int                @id @default(autoincrement())
+  UserID        Int
+  RequestedRole String              @db.VarChar(50)
+  Status        roleRequest_Status  @default(pending)
+  Message       String?            @db.VarChar(500)
+  CreatedAt     DateTime?          @default(now()) @db.DateTime(0)
+  ReviewedAt    DateTime?          @db.DateTime(0)
+  ReviewedBy    Int?
+  user          user                @relation(fields: [UserID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "rolerequest_ibfk_1")
+
+  @@index([UserID], map: "UserID")
+  @@index([Status], map: "Status")
 }

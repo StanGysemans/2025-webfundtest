@@ -48,3 +48,26 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+export const updateLocationPreference = async (req, res) => {
+  try {
+    const userId = req.user.UserID;
+    const preference = await userService.updateLocationPreference(userId, req.body);
+    res.json(preference);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getLocationPreference = async (req, res) => {
+  try {
+    const userId = req.user.UserID;
+    const preference = await userService.getLocationPreference(userId);
+    if (!preference) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(preference);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

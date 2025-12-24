@@ -95,3 +95,52 @@ export const remove = (id) => {
   });
 };
 
+// Location preferences
+export const updateLocationPreference = async (userId, data) => {
+  const { locationTrackingEnabled, locationLat, locationLng } = data;
+  
+  const updateData = {};
+  if (locationTrackingEnabled !== undefined) {
+    updateData.LocationTrackingEnabled = locationTrackingEnabled;
+  }
+  if (locationLat !== undefined && locationLat !== null) {
+    updateData.LocationLat = parseFloat(locationLat);
+  }
+  if (locationLng !== undefined && locationLng !== null) {
+    updateData.LocationLng = parseFloat(locationLng);
+  }
+  
+  return prisma.user.update({
+    where: { UserID: parseInt(userId) },
+    data: updateData,
+    select: {
+      UserID: true,
+      LocationTrackingEnabled: true,
+      LocationLat: true,
+      LocationLng: true
+    }
+  });
+};
+
+export const getLocationPreference = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { UserID: parseInt(userId) },
+    select: {
+      UserID: true,
+      LocationTrackingEnabled: true,
+      LocationLat: true,
+      LocationLng: true
+    }
+  });
+  
+  if (!user) {
+    return null;
+  }
+  
+  return {
+    locationTrackingEnabled: user.LocationTrackingEnabled || false,
+    locationLat: user.LocationLat ? Number(user.LocationLat) : null,
+    locationLng: user.LocationLng ? Number(user.LocationLng) : null
+  };
+};
+

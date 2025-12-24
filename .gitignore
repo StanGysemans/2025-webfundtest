@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+create-admin.js
+example-venue-creation.js
+delete-users.js
+clear-venues.js
