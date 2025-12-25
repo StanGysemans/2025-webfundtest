@@ -95,6 +95,135 @@ export const remove = (id) => {
   });
 };
 
+// Delete own account with all related data
+export const deleteOwnAccount = async (userId) => {
+  const userIdInt = parseInt(userId);
+  
+  return prisma.$transaction(async (tx) => {
+    // 1. Delete all venues owned by this user (and their related data)
+    const userVenues = await tx.venue.findMany({
+      where: { OwnerID: userIdInt },
+      select: { VenueID: true }
+    });
+    
+    for (const venue of userVenues) {
+      // Delete venuefoto
+      await tx.venuefoto.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete venuesfeerbeeld
+      await tx.venuesfeerbeeld.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete venuestatus
+      await tx.venuestatus.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete feedback
+      await tx.feedback.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete favorites
+      await tx.favorite.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete venuecontact
+      await tx.venuecontact.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete venueaddress
+      await tx.venueaddress.deleteMany({
+        where: { VenueID: venue.VenueID }
+      });
+      
+      // Delete venue
+      await tx.venue.delete({
+        where: { VenueID: venue.VenueID }
+      });
+    }
+    
+    // 2. Delete user's favorites
+    await tx.favorite.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 3. Delete user's feedback
+    await tx.feedback.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 4. Delete user's venue pings
+    await tx.venueping.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 5. Delete user's role requests
+    await tx.rolerequest.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 6. Delete user's roles
+    await tx.user_role.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 7. Delete user's friends (where user is UserID1, UserID2, or RequestedBy)
+    await tx.friend.deleteMany({
+      where: {
+        OR: [
+          { UserID1: userIdInt },
+          { UserID2: userIdInt },
+          { RequestedBy: userIdInt }
+        ]
+      }
+    });
+    
+    // 8. Delete chats where user is involved (and their messages)
+    const userChats = await tx.chat.findMany({
+      where: {
+        OR: [
+          { UserID1: userIdInt },
+          { UserID2: userIdInt }
+        ]
+      },
+      select: { ChatID: true }
+    });
+    
+    for (const chat of userChats) {
+      // Delete chat messages
+      await tx.chatmessage.deleteMany({
+        where: { ChatID: chat.ChatID }
+      });
+      
+      // Delete chat
+      await tx.chat.delete({
+        where: { ChatID: chat.ChatID }
+      });
+    }
+    
+    // 9. Delete user's chat messages (in case any remain)
+    await tx.chatmessage.deleteMany({
+      where: { SenderID: userIdInt }
+    });
+    
+    // 10. Delete user's contacts
+    await tx.usercontact.deleteMany({
+      where: { UserID: userIdInt }
+    });
+    
+    // 11. Finally delete the user
+    return tx.user.delete({
+      where: { UserID: userIdInt }
+    });
+  });
+};
+
 // Location preferences
 export const updateLocationPreference = async (userId, data) => {
   const { locationTrackingEnabled, locationLat, locationLng } = data;

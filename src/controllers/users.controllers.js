@@ -71,3 +71,41 @@ export const getLocationPreference = async (req, res) => {
   }
 };
 
+export const deleteOwnAccount = async (req, res) => {
+  try {
+    console.log('deleteOwnAccount controller called');
+    console.log('Request user:', req.user);
+    console.log('Request method:', req.method);
+    console.log('Request path:', req.path);
+    console.log('Request originalUrl:', req.originalUrl);
+    
+    const userId = req.user?.UserID; // From JWT token
+    
+    if (!userId) {
+      console.error('No UserID in token');
+      return res.status(401).json({ error: 'Invalid token: No UserID found' });
+    }
+    
+    console.log('Deleting account for user ID:', userId);
+    
+    // Verify user exists
+    const user = await userService.getById(userId);
+    if (!user) {
+      console.error('User not found:', userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log('User found, proceeding with deletion...');
+    
+    // Delete account and all related data
+    await userService.deleteOwnAccount(userId);
+    
+    console.log('Account successfully deleted');
+    res.status(200).json({ message: 'Account successfully deleted' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: error.message || 'Failed to delete account' });
+  }
+};
+
